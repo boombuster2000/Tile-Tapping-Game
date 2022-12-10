@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <time.h>
 #include <string>
+#include <conio.h>
 
 void print_board(char board[9]) {
 	system("cls");
@@ -43,12 +44,11 @@ int main() {
 	print_board(board);
 
 	while (true) {
-		std::string user_square_string;
-		std::cin >> user_square_string;
-		short user_square = std::stoi(user_square_string) -1;
+		char ch_user_square = _getch();
+		short user_square = ((short)(ch_user_square) - 48) - 1;
 		
 		if (board[user_square] == '#') {
-			board[user_square] = user_square_string[0];
+			board[user_square] = ch_user_square;
 			
 			//removes index
 			for (short i = 0; i < 3; i++) {
@@ -57,7 +57,6 @@ int main() {
 					board[squares_filled[i]] = '#';
 				}
 			}
-
 			
 		}
 
