@@ -8,9 +8,10 @@
 
 void print_board(char board[9]) {
 	system("cls");
+	std::cout << "|";
 	for (short x = 0; x < 9; x++) {
-		std::cout << board[x];
-		if ((x + 1) % 3 == 0) std::cout << std::endl;
+		std::cout << board[x] << "|";
+		if ((x + 1) % 3 == 0 && x !=8) std::cout << std::endl << "|";
 	}
 	std::cout << std::endl;
 }
@@ -18,8 +19,9 @@ void print_board(char board[9]) {
 short pick_random_square(short squares_filled[3]) {
 	short index;
 	index = rand() % 9;
+	//makes sure not already picked
 	for (short i = 0; i < 3; i++) {
-		if (squares_filled[i] != '\0' && index == squares_filled[i]) {
+		if (index == squares_filled[i]) {
 			i = 0;
 			index = rand() % 9;
 		}
@@ -43,6 +45,7 @@ int main() {
 
 	print_board(board);
 
+	short score = 0;
 	while (true) {
 		char ch_user_square = _getch();
 		short user_square = ((short)(ch_user_square) - 48) - 1;
@@ -55,6 +58,7 @@ int main() {
 				if (squares_filled[i] == user_square) {
 					squares_filled[i] = pick_random_square(squares_filled);
 					board[squares_filled[i]] = '#';
+					score++;
 				}
 			}
 			
