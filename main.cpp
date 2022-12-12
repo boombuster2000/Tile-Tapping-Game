@@ -6,67 +6,119 @@
 #include <string>
 #include <conio.h>
 
-void print_board(char board[9]) {
+#define set_text_red std::cout << "\033[0;31m"
+#define set_text_green std::cout << "\033[0;32m"
+#define set_text_cyan std::cout << "\033[0;36m"
+
+struct Coords {
+	short x;
+	short y;
+};
+
+
+void print_board(char board[3][3]) {
 	system("cls");
+	set_text_red;
 	std::cout << "|";
-	for (short x = 0; x < 9; x++) {
-		std::cout << board[x] << "|";
-		if ((x + 1) % 3 == 0 && x !=8) std::cout << std::endl << "|";
+	for (short y = 0; y < 3; y++) {
+		for (short x = 0; x < 3; x++) {
+			if (board[y][x] == '#') set_text_green;
+			else set_text_cyan;
+			std::cout << board[y][x];
+			set_text_red;
+			std::cout << "|";
+			
+			
+		}
+		if (y != 2) std::cout << std::endl << "|";
 	}
 	std::cout << std::endl;
 }
 
-short pick_random_square(short squares_filled[3]) {
-	short index;
-	index = rand() % 9;
+Coords pick_random_square(Coords squares_filled[3]) {
+	Coords coords;
+	coords.x = rand() % 3;
+	coords.y = rand() % 3;
 	//makes sure not already picked
 	for (short i = 0; i < 3; i++) {
-		if (index == squares_filled[i]) {
+		if (coords.x == squares_filled[i].x && coords.y == squares_filled[i].y) {
 			i = 0;
-			index = rand() % 9;
+			coords.x = rand() % 3;
+			coords.y = rand() % 3;
 		}
 	}
-	return index;
+	return coords;
 }
 
+Coords user_move(char board[3][3]) {
+	char board_template[3][3] = {
+		{'7','8','9'},
+		{'4','5','6'},
+		{'1','2','3' } };
 
+	bool valid_input = false;
+	char user_square;
+	do {
+		user_square = _getch();
+		for (int y = 0; y < 3; y++) {
+			for (int x = 0; x < 3; x++) {
+				if (user_square == board_template[y][x]) {
+					valid_input = true;
+				}
+			}
+		}
+	} while (!valid_input);
+	
+	for (short y = 0; y < 3; y++) {
+		for (short x = 0; x < 3; x++) {
+			if (board_template[y][x] == user_square) {
+				if (board[y][x] == '#') {
+					Coords position;
+					position.x = x;
+					position.y = y;
+					return position;
+				}
+			}
+		}
+	}
+
+}
 int main() {
-	char board[9] = {'1','2','3','4','5','6','7','8','9'};
+	char board[3][3] = {
+		{'O','O','O'},
+		{'O','O','O'},
+		{'O','O','O' } };
+
 	srand(time(0));
 	print_board(board);
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 	// pickking 3 random squares to start
-	short squares_filled[3];
+	Coords squares_filled[3];
 	for (short i = 0; i < 3; i++) {
 		squares_filled[i] = pick_random_square(squares_filled);
-		board[squares_filled[i]] = '#';
+		board[squares_filled[i].y][squares_filled[i].x] = '#';
 	}
 
 	print_board(board);
 
 	short score = 0;
 	while (true) {
-		char ch_user_square = _getch();
-		short user_square = ((short)(ch_user_square) - 48) - 1;
 		
-		if (board[user_square] == '#') {
-			board[user_square] = ch_user_square;
-			
-			//removes index
-			for (short i = 0; i < 3; i++) {
-				if (squares_filled[i] == user_square) {
-					squares_filled[i] = pick_random_square(squares_filled);
-					board[squares_filled[i]] = '#';
-					score++;
-				}
-			}
-			
-		}
+		Coords coords = user_move(board);
+		
+		board[coords.y][coords.x] = 'O';
 
+		//removes index
+		for (short i = 0; i < 3; i++) {
+			if (squares_filled[i].x == coords.x && squares_filled[i].y == coords.y) {
+				squares_filled[i] = pick_random_square(squares_filled);
+				board[squares_filled[i].y][squares_filled[i].x] = '#';
+				score++;
+			}
+		}
 		print_board(board);
 	}
-	
 
 	return 0;
 }
