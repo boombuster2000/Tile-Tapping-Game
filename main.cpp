@@ -17,6 +17,19 @@ struct Coords {
 	short y;
 };
 
+struct Changes {
+	char board[3][3];
+	Coords squares_filled[3];
+
+	void set_changes(char _board[3][3], Coords _squares_filled[3]) {
+		for (short y = 0; y < 3; y++) {
+			for (short x = 0; x < 3; x++) {
+				board[y][x] = _board[y][x];
+			}
+			squares_filled[y] = _squares_filled[y];
+		}
+	}
+};
 void increase_text_size() {
 	static CONSOLE_FONT_INFOEX  fontex;
 	fontex.cbSize = sizeof(CONSOLE_FONT_INFOEX);
@@ -26,6 +39,14 @@ void increase_text_size() {
 	fontex.dwFontSize.X = 36;
 	fontex.dwFontSize.Y = 36;
 	SetCurrentConsoleFontEx(hOut, NULL, &fontex);
+}
+
+void count_down(short seconds) {
+	for (short second = 0; second < seconds; second++) {
+		system("cls");
+		std::cout << seconds - second;
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	}
 }
 
 void print_board(char board[3][3]) {
@@ -98,46 +119,111 @@ Coords user_move(char board[3][3]) {
 	}
 
 }
-int main() {
-	char board[3][3] = {
-		{'O','O','O'},
-		{'O','O','O'},
-		{'O','O','O' } };
 
-	increase_text_size();
-	srand(time(0));
-	print_board(board);
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+char menu() {
+	char option;
+	bool valid_move = false;
+	char valid_moves[] = { '1'};
 
-	// pickking 3 random squares to start
+	while (!valid_move) {
+		system("cls");
+		std::cout << "Menu\n";
+		std::cout << "1) Timed Mode\n";
+		std::cout << std::endl;
+		std::cout << ">> ";
+		option = _getch();
+		for (char _valid_move : valid_moves) if (option == _valid_move) valid_move = true;
+
+	}
+
+	return option;
+
+}
+
+
+Changes init_game(char board[3][3]) {
+	// picking 3 random squares to start
 	Coords squares_filled[3];
+	Changes changes;
 	for (short i = 0; i < 3; i++) {
 		squares_filled[i] = pick_random_square(board);
 		board[squares_filled[i].y][squares_filled[i].x] = '#';
 	}
 
-	print_board(board);
+	changes.set_changes(board, squares_filled);
 
-	short score = 0;
-	while (true) {
-		
-		Coords coords = user_move(board);
+	return changes;
+}
 
-		//removes index
-		for (short i = 0; i < 3; i++) {
-			if (squares_filled[i].x == coords.x && squares_filled[i].y == coords.y) {
-				squares_filled[i] = pick_random_square(board);
-				board[squares_filled[i].y][squares_filled[i].x] = '#';
-				/*std::cout << "Y: " << squares_filled[i].y << std::endl;
-				std::cout << "X: " << squares_filled[i].x << std::endl;
-				system("pause");*/
-				score++;
-			}
+Changes run_frame(char board[3][3], Coords squares_filled[3]) {
+	Coords coords = user_move(board);
+	Changes changes;
+
+	//replaces square
+	for (short i = 0; i < 3; i++) {
+		if (squares_filled[i].x == coords.x && squares_filled[i].y == coords.y) {
+			squares_filled[i] = pick_random_square(board);
+			board[squares_filled[i].y][squares_filled[i].x] = '#';
 		}
-
-		board[coords.y][coords.x] = 'O';
-		print_board(board);
 	}
 
+	board[coords.y][coords.x] = 'O';
+
+	changes.set_changes(board, squares_filled);
+
+	return changes;
+}
+
+
+int main() {
+	while (true) {
+		Coords squares_filled[3];
+		char board[3][3] = {
+			{'O','O','O'},
+			{'O','O','O'},
+			{'O','O','O' } };
+
+		increase_text_size();
+		srand(time(0));
+
+
+		char option = menu();
+
+		if (option == '1') {
+			count_down(3);
+		}
+		auto start = std::chrono::high_resolution_clock::now();
+
+
+		Changes changes = init_game(board);
+		for (short y = 0; y < 3; y++) {
+			for (short x = 0; x < 3; x++) {
+				board[y][x] = changes.board[y][x];
+			}
+			squares_filled[y] = changes.squares_filled[y];
+		}
+
+		print_board(board);
+
+		for (short round = 0; round < 100; round++) {
+
+			Changes frame = run_frame(board, squares_filled);
+
+			for (short y = 0; y < 3; y++) {
+				for (short x = 0; x < 3; x++) {
+					board[y][x] = frame.board[y][x];
+				}
+				squares_filled[y] = frame.squares_filled[y];
+			}
+
+			print_board(board);
+		}
+		auto end = std::chrono::high_resolution_clock::now();
+		float time_taken = (float)std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()/(float)1000;
+		system("cls");
+		std::cout << "Time: " <<  time_taken << "s\n";
+		char x;
+		std::cin >> x;
+	}
 	return 0;
 }
